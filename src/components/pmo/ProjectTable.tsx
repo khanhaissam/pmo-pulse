@@ -12,7 +12,13 @@ import { StatusDot, StatusPill } from "./StatusPill";
 import { type Health, type Phase, type Project, healthValues, phases } from "@/data/portfolio";
 import { formatCurrency, formatDate } from "@/lib/portfolio-metrics";
 
-export function ProjectTable({ projects }: { projects: Project[] }) {
+export function ProjectTable({
+  projects,
+  onSelectProject,
+}: {
+  projects: Project[];
+  onSelectProject?: (project: Project) => void;
+}) {
   const [query, setQuery] = useState("");
   const [phase, setPhase] = useState<Phase | "all">("all");
   const [health, setHealth] = useState<Health | "all">("all");
@@ -108,7 +114,20 @@ export function ProjectTable({ projects }: { projects: Project[] }) {
           </thead>
           <tbody>
             {rows.map((p) => (
-              <tr key={p.id} className="border-b border-border last:border-0 hover:bg-surface">
+              <tr
+                key={p.id}
+                tabIndex={0}
+                role="button"
+                aria-label={`View details for ${p.name}`}
+                onClick={() => onSelectProject?.(p)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    onSelectProject?.(p);
+                  }
+                }}
+                className="cursor-pointer border-b border-border last:border-0 hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+              >
                 <td className="px-4 py-3">
                   <p className="font-medium text-foreground">{p.name}</p>
                   <p className="text-xs text-muted-foreground">
