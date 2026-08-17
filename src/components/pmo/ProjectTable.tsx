@@ -12,7 +12,13 @@ import { StatusDot, StatusPill } from "./StatusPill";
 import { type Health, type Phase, type Project, healthValues, phases } from "@/data/portfolio";
 import { formatCurrency, formatDate } from "@/lib/portfolio-metrics";
 
-export function ProjectTable({ projects }: { projects: Project[] }) {
+export function ProjectTable({
+  projects,
+  onSelectProject,
+}: {
+  projects: Project[];
+  onSelectProject?: (project: Project) => void;
+}) {
   const [query, setQuery] = useState("");
   const [phase, setPhase] = useState<Phase | "all">("all");
   const [health, setHealth] = useState<Health | "all">("all");
