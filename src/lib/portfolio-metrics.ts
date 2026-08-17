@@ -163,7 +163,7 @@ export function getAttentionReasons(project: Project, limit = 4): AttentionReaso
 
 /** Red first, then Amber; within a band, most overdue actions and risks first. */
 export function getAttentionProjects(list: Project[]): Project[] {
-  const rank: Record<string, number> = { Red: 0, Amber: 1 };
+  const rank = (h: Health): number => (h === "Red" ? 0 : h === "Amber" ? 1 : 2);
   return list
     .filter((p) => p.overallHealth === "Red" || p.overallHealth === "Amber")
     .slice()
