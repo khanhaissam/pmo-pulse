@@ -63,20 +63,32 @@ function Dashboard() {
       </header>
 
       <main className="mx-auto max-w-7xl space-y-5 px-4 py-6 sm:px-6">
-        <SummaryCards summary={summary} />
+        <SummaryCards
+          summary={summary}
+          activeFilter={cardFilter}
+          onFilterChange={setCardFilter}
+        />
+
+        <ManagementAttention projects={projects} onSelectProject={setSelected} />
 
         <div className="grid gap-5 lg:grid-cols-2">
           <HealthOverview projects={projects} />
           <ProgressOverview projects={projects} />
         </div>
 
-        <ProjectTable projects={projects} />
+        <ProjectTable projects={filtered} onSelectProject={setSelected} />
 
         <div className="grid gap-5 lg:grid-cols-2">
           <TopRisks risks={portfolioRisks} projects={projects} />
           <UpcomingMilestones projects={projects} />
         </div>
       </main>
+
+      <ProjectDetail
+        project={selected}
+        risks={portfolioRisks}
+        onOpenChange={(open) => !open && setSelected(null)}
+      />
     </div>
   );
 }
