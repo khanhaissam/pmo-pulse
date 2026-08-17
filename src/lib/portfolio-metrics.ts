@@ -169,7 +169,7 @@ export function getAttentionProjects(list: Project[]): Project[] {
     .slice()
     .sort(
       (a, b) =>
-        rank[a.overallHealth] - rank[b.overallHealth] ||
+        rank(a.overallHealth) - rank(b.overallHealth) ||
         b.overdueActions - a.overdueActions ||
         b.openRisks - a.openRisks,
     );
