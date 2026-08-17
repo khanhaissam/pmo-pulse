@@ -35,6 +35,23 @@ export const Route = createFileRoute("/")({
 
 function Dashboard() {
   const summary = getPortfolioSummary(projects);
+  const [cardFilter, setCardFilter] = useState<SummaryFilter>("all");
+  const [selected, setSelected] = useState<Project | null>(null);
+
+  const filtered = useMemo(() => {
+    switch (cardFilter) {
+      case "green":
+        return projects.filter((p) => p.overallHealth === "Green");
+      case "amber":
+        return projects.filter((p) => p.overallHealth === "Amber");
+      case "red":
+        return projects.filter((p) => p.overallHealth === "Red");
+      case "overdue":
+        return projects.filter((p) => p.overdueActions > 0);
+      default:
+        return projects;
+    }
+  }, [cardFilter]);
 
   return (
     <div className="min-h-screen bg-surface">
