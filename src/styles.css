@@ -160,3 +160,19 @@
     color: var(--color-foreground);
   }
 }
+
+.dark {
+  --status-green: oklch(0.7 0.13 155);
+  --status-green-soft: oklch(0.28 0.05 155);
+  --status-amber: oklch(0.78 0.14 78);
+  --status-amber-soft: oklch(0.3 0.05 78);
+  --status-red: oklch(0.68 0.18 25);
+  --status-red-soft: oklch(0.3 0.06 25);
+  --surface: oklch(0.18 0.03 264);
+}
+
+@layer base {
+  body {
+    -webkit-font-smoothing: antialiased;
+  }
+}
