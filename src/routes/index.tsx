@@ -1,11 +1,14 @@
+import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { HealthOverview } from "@/components/pmo/HealthOverview";
+import { ManagementAttention } from "@/components/pmo/ManagementAttention";
 import { ProgressOverview } from "@/components/pmo/ProgressOverview";
+import { ProjectDetail } from "@/components/pmo/ProjectDetail";
 import { ProjectTable } from "@/components/pmo/ProjectTable";
-import { SummaryCards } from "@/components/pmo/SummaryCards";
+import { SummaryCards, type SummaryFilter } from "@/components/pmo/SummaryCards";
 import { TopRisks } from "@/components/pmo/TopRisks";
 import { UpcomingMilestones } from "@/components/pmo/UpcomingMilestones";
-import { portfolioRisks, projects } from "@/data/portfolio";
+import { portfolioRisks, projects, type Project } from "@/data/portfolio";
 import { getPortfolioSummary } from "@/lib/portfolio-metrics";
 
 export const Route = createFileRoute("/")({
