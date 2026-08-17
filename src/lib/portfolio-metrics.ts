@@ -68,7 +68,7 @@ export function getUpcomingMilestones(
         status,
       };
     })
-    .filter((m) => m.daysAway <= windowDays)
+    .filter((m) => m.daysAway <= windowDays && m.daysAway >= -windowDays)
     .sort((a, b) => a.daysAway - b.daysAway);
 }
 
