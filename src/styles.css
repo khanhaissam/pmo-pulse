@@ -72,7 +72,15 @@
 
 
 :root {
-  --radius: 0.625rem;
+  --radius: 0.5rem;
+  --status-green: oklch(0.55 0.13 155);
+  --status-green-soft: oklch(0.95 0.04 155);
+  --status-amber: oklch(0.68 0.14 72);
+  --status-amber-soft: oklch(0.96 0.05 85);
+  --status-red: oklch(0.55 0.19 25);
+  --status-red-soft: oklch(0.95 0.04 25);
+  --surface: oklch(0.977 0.004 250);
+
   --background: oklch(1 0 0);
   --foreground: oklch(0.129 0.042 264.695);
   --card: oklch(1 0 0);
