@@ -91,20 +91,29 @@ export function ProjectDetail({
                   value={
                     <StatusDot
                       health={project.scheduleHealth}
-                      srLabel={`Schedule ${project.scheduleHealth}`}
+                      label={scheduleLabel[project.scheduleHealth]}
+                      srLabel={`Schedule: ${scheduleLabel[project.scheduleHealth]}`}
                     />
                   }
                 />
                 <Row
                   label="Cost"
                   value={
-                    <StatusDot health={project.costHealth} srLabel={`Cost ${project.costHealth}`} />
+                    <StatusDot
+                      health={project.costHealth}
+                      label={getCostLabel(project)}
+                      srLabel={`Cost: ${getCostLabel(project)}`}
+                    />
                   }
                 />
                 <Row
                   label="Risk"
                   value={
-                    <StatusDot health={project.riskHealth} srLabel={`Risk ${project.riskHealth}`} />
+                    <StatusDot
+                      health={project.riskHealth}
+                      label={riskLabel[project.riskHealth]}
+                      srLabel={`Risk: ${riskLabel[project.riskHealth]}`}
+                    />
                   }
                 />
               </Block>

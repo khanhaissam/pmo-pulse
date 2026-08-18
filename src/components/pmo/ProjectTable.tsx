@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Search } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -10,28 +10,49 @@ import {
 } from "@/components/ui/select";
 import { StatusDot, StatusPill } from "./StatusPill";
 import { type Health, type Phase, type Project, healthValues, phases } from "@/data/portfolio";
-import { formatCurrency, formatDate } from "@/lib/portfolio-metrics";
+import {
+  formatCurrency,
+  formatDate,
+  getCostLabel,
+  sortOptions,
+  sortProjects,
+  type SortKey,
+} from "@/lib/portfolio-metrics";
+import { overallLabel, riskLabel, scheduleLabel } from "@/lib/status-labels";
 
 export function ProjectTable({
   projects,
+  totalCount,
   onSelectProject,
 }: {
   projects: Project[];
+  /** Full portfolio size, so the header always counts against the whole portfolio. */
+  totalCount: number;
   onSelectProject?: (project: Project) => void;
 }) {
   const [query, setQuery] = useState("");
   const [phase, setPhase] = useState<Phase | "all">("all");
   const [health, setHealth] = useState<Health | "all">("all");
+  const [sort, setSort] = useState<SortKey>("priority");
+
+  const tableFiltersActive = query.trim() !== "" || phase !== "all" || health !== "all";
 
   const rows = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return projects.filter(
+    const filtered = projects.filter(
       (p) =>
         (q === "" || p.name.toLowerCase().includes(q) || p.manager.toLowerCase().includes(q)) &&
         (phase === "all" || p.phase === phase) &&
         (health === "all" || p.overallHealth === health),
     );
-  }, [projects, query, phase, health]);
+    return sortProjects(filtered, sort);
+  }, [projects, query, phase, health, sort]);
+
+  const clearFilters = () => {
+    setQuery("");
+    setPhase("all");
+    setHealth("all");
+  };
 
   return (
     <section className="rounded-lg border border-border bg-card">
@@ -39,11 +60,14 @@ export function ProjectTable({
         <div>
           <h2 className="text-sm font-semibold text-foreground">Project portfolio</h2>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            Showing {rows.length} of {projects.length} projects
+            Showing {rows.length} of {totalCount} projects
+          </p>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            Select a project to view detailed health, cost, risks and milestone information.
           </p>
         </div>
 
-        <div className="flex flex-col gap-2 sm:flex-row">
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
           <div className="relative sm:w-56">
             <Search
               className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
@@ -73,23 +97,47 @@ export function ProjectTable({
           </Select>
 
           <Select value={health} onValueChange={(v) => setHealth(v as Health | "all")}>
-            <SelectTrigger className="h-9 w-full text-sm sm:w-36" aria-label="Filter by health">
-              <SelectValue placeholder="Health" />
+            <SelectTrigger className="h-9 w-full text-sm sm:w-40" aria-label="Filter by status">
+              <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All health</SelectItem>
+              <SelectItem value="all">All statuses</SelectItem>
               {healthValues.map((h) => (
                 <SelectItem key={h} value={h}>
-                  {h}
+                  {overallLabel[h]}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
+
+          <Select value={sort} onValueChange={(v) => setSort(v as SortKey)}>
+            <SelectTrigger className="h-9 w-full text-sm sm:w-48" aria-label="Sort projects by">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              {sortOptions.map((o) => (
+                <SelectItem key={o.value} value={o.value}>
+                  Sort: {o.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {tableFiltersActive && (
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="inline-flex h-9 items-center gap-1.5 rounded-md border border-border px-3 text-xs font-medium text-muted-foreground transition-colors hover:bg-surface hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <X className="size-3.5" aria-hidden />
+              Clear filters
+            </button>
+          )}
         </div>
       </header>
 
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[62rem] border-collapse text-sm">
+        <table className="w-full min-w-[68rem] border-collapse text-sm">
           <thead>
             <tr className="border-b border-border bg-surface text-left">
               {[
@@ -140,13 +188,25 @@ export function ProjectTable({
                   <StatusPill health={p.overallHealth} />
                 </td>
                 <td className="px-4 py-3">
-                  <StatusDot health={p.scheduleHealth} srLabel={`Schedule ${p.scheduleHealth}`} />
+                  <StatusDot
+                    health={p.scheduleHealth}
+                    label={scheduleLabel[p.scheduleHealth]}
+                    srLabel={`Schedule: ${scheduleLabel[p.scheduleHealth]}`}
+                  />
                 </td>
                 <td className="px-4 py-3">
-                  <StatusDot health={p.costHealth} srLabel={`Cost ${p.costHealth}`} />
+                  <StatusDot
+                    health={p.costHealth}
+                    label={getCostLabel(p)}
+                    srLabel={`Cost: ${getCostLabel(p)}`}
+                  />
                 </td>
                 <td className="px-4 py-3">
-                  <StatusDot health={p.riskHealth} srLabel={`Risk ${p.riskHealth}`} />
+                  <StatusDot
+                    health={p.riskHealth}
+                    label={riskLabel[p.riskHealth]}
+                    srLabel={`Risk: ${riskLabel[p.riskHealth]}`}
+                  />
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
