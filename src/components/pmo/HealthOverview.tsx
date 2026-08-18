@@ -1,17 +1,12 @@
 import { cn } from "@/lib/utils";
 import type { Health, Project } from "@/data/portfolio";
 import { getHealthBreakdown } from "@/lib/portfolio-metrics";
+import { overallLabel as labels } from "@/lib/status-labels";
 
 const bar: Record<Health, string> = {
   Green: "bg-status-green",
   Amber: "bg-status-amber",
   Red: "bg-status-red",
-};
-
-const labels: Record<Health, string> = {
-  Green: "On track",
-  Amber: "At risk",
-  Red: "Critical",
 };
 
 export function HealthOverview({ projects }: { projects: Project[] }) {

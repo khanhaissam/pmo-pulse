@@ -36,7 +36,7 @@ export function ManagementAttention({
           No projects currently require management attention.
         </p>
       ) : (
-        <ul className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <ul className="mt-4 grid gap-3 sm:grid-cols-2">
           {attention.map((p) => {
             const critical = p.overallHealth === "Red";
             return (

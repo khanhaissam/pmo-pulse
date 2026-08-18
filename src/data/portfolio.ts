@@ -233,3 +233,10 @@ export const phases: Phase[] = [
 ];
 
 export const healthValues: Health[] = ["Green", "Amber", "Red"];
+
+/** Single source of truth for demo-data context and the fixed reporting date. */
+export const portfolioMeta = {
+  reportingDate: "2026-08-17",
+  dataType: "Fictional demo data",
+} as const;
+

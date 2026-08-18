@@ -1,4 +1,13 @@
-import type { Health, Project } from "@/data/portfolio";
+import { portfolioMeta, type Health, type Project } from "@/data/portfolio";
+import {
+  costLabelFromPercent,
+  healthRank,
+  riskLabel,
+  scheduleLabel,
+} from "@/lib/status-labels";
+
+/** Fixed reporting date for all derived timing (never the system clock). */
+export const reportingDate = new Date(`${portfolioMeta.reportingDate}T00:00:00Z`);
 
 export interface PortfolioSummary {
   activeProjects: number;
@@ -34,7 +43,7 @@ export function getHealthBreakdown(list: Project[]): Array<{
   });
 }
 
-export function daysUntil(iso: string, from = new Date()): number {
+export function daysUntil(iso: string, from = reportingDate): number {
   const target = new Date(`${iso}T00:00:00Z`);
   const base = Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), from.getUTCDate());
   return Math.round((target.getTime() - base) / 86_400_000);
@@ -52,7 +61,7 @@ export interface UpcomingMilestone {
 export function getUpcomingMilestones(
   list: Project[],
   windowDays = 30,
-  from = new Date(),
+  from = reportingDate,
 ): UpcomingMilestone[] {
   return list
     .map((p) => {
@@ -116,33 +125,36 @@ export interface AttentionReason {
   tone: ReasonTone;
 }
 
-/** Generates management-attention reasons from project fields (no manual text per project). */
+/** Semantic cost wording for a project, from the single cost-variance calculation. */
+export function getCostLabel(project: Project): string {
+  return costLabelFromPercent(getCostVariance(project).percent);
+}
+
+/**
+ * Management-attention reasons in plain management language.
+ * Only exceptions are reported: healthy dimensions and favourable forecasts are omitted.
+ */
 export function getAttentionReasons(project: Project, limit = 4): AttentionReason[] {
   const reasons: AttentionReason[] = [];
   const variance = getCostVariance(project);
 
-  const dimensions: Array<[string, Health]> = [
-    ["Schedule", project.scheduleHealth],
-    ["Cost", project.costHealth],
-    ["Risk", project.riskHealth],
-  ];
-
-  for (const [name, health] of dimensions) {
-    if (health === "Red") reasons.push({ label: `${name} Red`, tone: "critical" });
-  }
-  if (!variance.favourable && variance.percent >= 10) {
+  if (project.scheduleHealth !== "Green") {
     reasons.push({
-      label: `High forecast variance ${formatVariancePercent(variance.percent)}`,
-      tone: "critical",
+      label: scheduleLabel[project.scheduleHealth],
+      tone: project.scheduleHealth === "Red" ? "critical" : "warning",
     });
   }
-  for (const [name, health] of dimensions) {
-    if (health === "Amber") reasons.push({ label: `${name} Amber`, tone: "warning" });
-  }
-  if (!variance.favourable && variance.percent < 10 && variance.amount > 0) {
+  if (project.riskHealth !== "Green") {
     reasons.push({
-      label: `Forecast above approved budget (${formatVariance(variance.amount)})`,
-      tone: "warning",
+      label: riskLabel[project.riskHealth],
+      tone: project.riskHealth === "Red" ? "critical" : "warning",
+    });
+  }
+  // Single cost reason, derived from forecast vs approved budget only.
+  if (variance.percent >= 0.5) {
+    reasons.push({
+      label: costLabelFromPercent(variance.percent),
+      tone: variance.percent >= 10 ? "critical" : "warning",
     });
   }
   if (project.overdueActions > 0) {
@@ -163,13 +175,12 @@ export function getAttentionReasons(project: Project, limit = 4): AttentionReaso
 
 /** Red first, then Amber; within a band, most overdue actions and risks first. */
 export function getAttentionProjects(list: Project[]): Project[] {
-  const rank = (h: Health): number => (h === "Red" ? 0 : h === "Amber" ? 1 : 2);
   return list
     .filter((p) => p.overallHealth === "Red" || p.overallHealth === "Amber")
     .slice()
     .sort(
       (a, b) =>
-        rank(a.overallHealth) - rank(b.overallHealth) ||
+        healthRank(a.overallHealth) - healthRank(b.overallHealth) ||
         b.overdueActions - a.overdueActions ||
         b.openRisks - a.openRisks,
     );
@@ -177,8 +188,69 @@ export function getAttentionProjects(list: Project[]): Project[] {
 
 export function getMilestoneStatus(
   iso: string,
-  from = new Date(),
+  from = reportingDate,
 ): UpcomingMilestone["status"] {
   const daysAway = daysUntil(iso, from);
   return daysAway < 0 ? "Overdue" : daysAway <= 10 ? "Due soon" : "On schedule";
+}
+
+/* ---------- V3 portfolio cost outlook ---------- */
+
+export interface CostOutlook {
+  approvedBudget: number;
+  forecastCost: number;
+  varianceAmount: number;
+  variancePercent: number;
+  favourable: boolean;
+  projectsAboveBudget: number;
+}
+
+export function getCostOutlook(list: Project[]): CostOutlook {
+  const approvedBudget = list.reduce((sum, p) => sum + p.approvedBudget, 0);
+  const forecastCost = list.reduce((sum, p) => sum + p.forecastCost, 0);
+  const varianceAmount = forecastCost - approvedBudget;
+  return {
+    approvedBudget,
+    forecastCost,
+    varianceAmount,
+    variancePercent: approvedBudget ? (varianceAmount / approvedBudget) * 100 : 0,
+    favourable: varianceAmount <= 0,
+    projectsAboveBudget: list.filter((p) => p.forecastCost > p.approvedBudget).length,
+  };
+}
+
+/* ---------- V3 analytical sorting ---------- */
+
+export type SortKey = "priority" | "name" | "progress" | "milestone" | "variance";
+
+export const sortOptions: Array<{ value: SortKey; label: string }> = [
+  { value: "priority", label: "Management Priority" },
+  { value: "name", label: "Project Name" },
+  { value: "progress", label: "Progress" },
+  { value: "milestone", label: "Next Milestone" },
+  { value: "variance", label: "Cost Variance" },
+];
+
+/** Returns a new sorted array; never mutates the input. */
+export function sortProjects(list: Project[], key: SortKey): Project[] {
+  const copy = [...list];
+  switch (key) {
+    case "name":
+      return copy.sort((a, b) => a.name.localeCompare(b.name));
+    case "progress":
+      return copy.sort((a, b) => b.progress - a.progress);
+    case "milestone":
+      return copy.sort((a, b) => a.nextMilestoneDate.localeCompare(b.nextMilestoneDate));
+    case "variance":
+      return copy.sort(
+        (a, b) => getCostVariance(b).percent - getCostVariance(a).percent,
+      );
+    default:
+      return copy.sort(
+        (a, b) =>
+          healthRank(a.overallHealth) - healthRank(b.overallHealth) ||
+          b.overdueActions - a.overdueActions ||
+          b.openRisks - a.openRisks,
+      );
+  }
 }
