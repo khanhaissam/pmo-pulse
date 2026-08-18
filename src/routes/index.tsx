@@ -60,6 +60,9 @@ function Dashboard() {
         <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6">
           <h1 className="text-xl font-semibold tracking-tight text-foreground">PMO Pulse</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">Portfolio health at a glance</p>
+          <p className="mt-1 text-xs text-muted-foreground/80">
+            {portfolioMeta.dataType} · As of {formatDate(portfolioMeta.reportingDate)}
+          </p>
         </div>
       </header>
 
@@ -70,6 +73,8 @@ function Dashboard() {
           onFilterChange={setCardFilter}
         />
 
+        <CostOutlook projects={projects} />
+
         <ManagementAttention projects={projects} onSelectProject={setSelected} />
 
         <div className="grid gap-5 lg:grid-cols-2">
@@ -77,11 +82,19 @@ function Dashboard() {
           <ProgressOverview projects={projects} />
         </div>
 
-        <ProjectTable projects={filtered} onSelectProject={setSelected} />
+        <ProjectTable
+          projects={filtered}
+          totalCount={projects.length}
+          onSelectProject={setSelected}
+        />
 
         <div className="grid gap-5 lg:grid-cols-2">
-          <TopRisks risks={portfolioRisks} projects={projects} />
-          <UpcomingMilestones projects={projects} />
+          <TopRisks
+            risks={portfolioRisks}
+            projects={projects}
+            onSelectProject={setSelected}
+          />
+          <UpcomingMilestones projects={projects} onSelectProject={setSelected} />
         </div>
       </main>
 
