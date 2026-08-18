@@ -8,7 +8,13 @@ const statusStyle: Record<string, string> = {
   "On schedule": "bg-status-green-soft text-status-green",
 };
 
-export function UpcomingMilestones({ projects }: { projects: Project[] }) {
+export function UpcomingMilestones({
+  projects,
+  onSelectProject,
+}: {
+  projects: Project[];
+  onSelectProject?: (project: Project) => void;
+}) {
   const milestones = getUpcomingMilestones(projects, 30);
 
   return (
@@ -24,30 +30,37 @@ export function UpcomingMilestones({ projects }: { projects: Project[] }) {
         </p>
       ) : (
         <ul className="mt-4 divide-y divide-border">
-          {milestones.map((m) => (
-            <li
-              key={`${m.projectId}-${m.date}`}
-              className="flex flex-wrap items-center justify-between gap-2 py-3 first:pt-0 last:pb-0"
-            >
-              <div className="min-w-0">
-                <p className="text-xs font-semibold text-foreground">{m.projectName}</p>
-                <p className="truncate text-sm text-foreground">{m.milestone}</p>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="text-xs tabular-nums text-muted-foreground">
-                  {formatDate(m.date)}
-                </span>
-                <span
-                  className={cn(
-                    "rounded px-1.5 py-0.5 text-[11px] font-medium",
-                    statusStyle[m.status],
-                  )}
+          {milestones.map((m) => {
+            const project = projects.find((p) => p.id === m.projectId);
+            return (
+              <li key={`${m.projectId}-${m.date}`}>
+                <button
+                  type="button"
+                  onClick={() => project && onSelectProject?.(project)}
+                  aria-label={`View details for ${m.projectName}`}
+                  className="-mx-2 flex w-full flex-wrap items-center justify-between gap-2 rounded-md px-2 py-3 text-left transition-colors hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
-                  {m.status}
-                </span>
-              </div>
-            </li>
-          ))}
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-foreground">{m.projectName}</p>
+                    <p className="truncate text-sm text-foreground">{m.milestone}</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs tabular-nums text-muted-foreground">
+                      {formatDate(m.date)}
+                    </span>
+                    <span
+                      className={cn(
+                        "rounded px-1.5 py-0.5 text-[11px] font-medium",
+                        statusStyle[m.status],
+                      )}
+                    >
+                      {m.status}
+                    </span>
+                  </div>
+                </button>
+              </li>
+            );
+          })}
         </ul>
       )}
     </section>

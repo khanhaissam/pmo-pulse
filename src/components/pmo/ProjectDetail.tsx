@@ -7,9 +7,11 @@ import {
   formatDate,
   formatVariance,
   formatVariancePercent,
+  getCostLabel,
   getCostVariance,
   getMilestoneStatus,
 } from "@/lib/portfolio-metrics";
+import { riskLabel, scheduleLabel } from "@/lib/status-labels";
 
 const severityStyle: Record<Severity, string> = {
   High: "bg-status-red-soft text-status-red",
