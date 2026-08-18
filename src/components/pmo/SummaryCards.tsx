@@ -60,17 +60,18 @@ export function SummaryCards({
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
       {cards.map((c) => {
-        const active = activeFilter === c.filter;
+        // "Active Projects" is the cleared state and is never highlighted.
+        const active = c.filter !== "all" && activeFilter === c.filter;
         return (
           <button
             key={c.label}
             type="button"
             aria-pressed={active}
             onClick={() =>
-              onFilterChange?.(active && c.filter !== "all" ? "all" : c.filter)
+              onFilterChange?.(active || c.filter === "all" ? "all" : c.filter)
             }
             className={cn(
-              "rounded-lg border bg-card p-4 text-left shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-colors hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              "flex h-full min-h-[6.5rem] flex-col rounded-lg border bg-card p-4 text-left shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-colors hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
               active ? "border-foreground/40 bg-surface" : "border-border",
             )}
           >
@@ -83,11 +84,6 @@ export function SummaryCards({
             <p className="mt-3 text-3xl font-semibold tabular-nums leading-none text-foreground">
               {c.value}
             </p>
-            {active && (
-              <p className="mt-1 text-[11px] font-medium text-muted-foreground">
-                {c.filter === "all" ? "Showing all projects" : "Filtering portfolio"}
-              </p>
-            )}
           </button>
         );
       })}

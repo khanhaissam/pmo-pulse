@@ -8,8 +8,9 @@ import { ProjectTable } from "@/components/pmo/ProjectTable";
 import { SummaryCards, type SummaryFilter } from "@/components/pmo/SummaryCards";
 import { TopRisks } from "@/components/pmo/TopRisks";
 import { UpcomingMilestones } from "@/components/pmo/UpcomingMilestones";
-import { portfolioRisks, projects, type Project } from "@/data/portfolio";
-import { getPortfolioSummary } from "@/lib/portfolio-metrics";
+import { CostOutlook } from "@/components/pmo/CostOutlook";
+import { portfolioMeta, portfolioRisks, projects, type Project } from "@/data/portfolio";
+import { formatDate, getPortfolioSummary } from "@/lib/portfolio-metrics";
 
 export const Route = createFileRoute("/")({
   head: () => ({
